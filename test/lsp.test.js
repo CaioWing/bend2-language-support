@@ -1,0 +1,47 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const fs = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { startServer, position } = require('./helpers/lsp');
+
+test('real LSP transport: imports, signatures, navigation, references and safe edits', { timeout: 15000 }, async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'bend2-lsp-test-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const lib = '# Add two values.\ndef add(a: U32, b: U32) -> U32:\n  U32.add(a, b)\ntype Cell is Data:\n  Cell.new{value: U32}\n';
+  const main = 'import ./Lib.bend as M\n\ndef main() -> U32:\n  M.add(1, 2)\n  M.Cell.\n# M.add is documentation\n';
+  await fs.writeFile(path.join(root, 'Lib.bend'), lib);
+  await fs.writeFile(path.join(root, 'Main.bend'), main);
+  const libUri = pathToFileURL(path.join(root, 'Lib.bend')).href;
+  const uri = pathToFileURL(path.join(root, 'Main.bend')).href;
+  const server = await startServer(pathToFileURL(root).href, { executablePath: '/missing-bend', lint: { run: 'off' } });
+  t.after(() => server.stop());
+  await server.open(uri, main);
+  const request = (method, pos) => server.connection.sendRequest(`textDocument/${method}`, { textDocument: { uri }, position: pos });
+  assert.equal(server.initialization.capabilities.referencesProvider, true);
+  const completion = await request('completion', position(main, 'M.Cell.', 7));
+  assert.equal(completion.find((item) => item.label === 'new').textEdit.newText, 'new{${1:value}}');
+  const signature = await request('signatureHelp', position(main, 'M.add(1, ', 9));
+  assert.equal(signature.activeParameter, 1);
+  assert.equal(signature.signatures[0].parameters.length, 2);
+  const definition = await request('definition', position(main, 'M.add', 3));
+  assert.equal(definition.uri, libUri);
+  const hover = await request('hover', position(main, 'M.add', 3));
+  assert.match(hover.contents.value, /Add two values/);
+  const references = await server.connection.sendRequest('textDocument/references', { textDocument: { uri }, position: position(main, 'M.add', 3), context: { includeDeclaration: true } });
+  assert.equal(references.length, 2);
+  const rename = await server.connection.sendRequest('textDocument/rename', { textDocument: { uri }, position: position(main, 'M.add', 3), newName: 'sum_values' });
+  assert.equal(rename.documentChanges.length, 2);
+  assert.equal(rename.documentChanges.find((change) => change.textDocument.uri === uri).textDocument.version, 1);
+  await assert.rejects(server.connection.sendRequest('textDocument/rename', { textDocument: { uri }, position: position(main, 'M.add', 3), newName: 'Cell' }), /already occurs/);
+  const symbols = await server.connection.sendRequest('workspace/symbol', { query: 'add' });
+  assert.equal(symbols.length, 1);
+  const folds = await server.connection.sendRequest('textDocument/foldingRange', { textDocument: { uri } });
+  assert.ok(folds.length);
+  // Open imported contents replace disk for every language feature.
+  await server.open(libUri, lib.replace('Add two values.', 'Updated unsaved documentation.'));
+  assert.match((await request('hover', position(main, 'M.add', 3))).contents.value, /Updated unsaved/);
+  assert.equal(await request('hover', position(main, '# M.add', 4)), null);
+});
