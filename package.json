@@ -2,7 +2,7 @@
   "name": "bend2-language-support",
   "displayName": "Bend 2 Language Support",
   "description": "Syntax highlighting, Bend 2 compiler diagnostics, completions, hovers, snippets, and editor commands.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "CaioWing-bender",
   "license": "MIT",
   "repository": {
