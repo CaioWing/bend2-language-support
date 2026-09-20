@@ -1,0 +1,123 @@
+{
+  "Import Base": {
+    "prefix": "import-base",
+    "body": ["import Base"],
+    "description": "Import the Bend 2 Base module"
+  },
+  "Import local module": {
+    "prefix": "import-local",
+    "body": ["import ./${1:module}.bend as ${2:Module}"],
+    "description": "Import a local Bend 2 module with an alias"
+  },
+  "Function definition": {
+    "prefix": "def",
+    "body": [
+      "def ${1:name}(${2:x}: ${3:U32}) -> ${4:U32}:",
+      "  ${0:x}"
+    ],
+    "description": "Define a typed Bend 2 function"
+  },
+  "Pure main": {
+    "prefix": "main",
+    "body": [
+      "def main() -> ${1:U32}:",
+      "  ${0:42}"
+    ],
+    "description": "Define a pure main function"
+  },
+  "IO main": {
+    "prefix": "main-io",
+    "body": [
+      "def main() -> IO(Unit):",
+      "  do IO<Unit>:",
+      "    ${1:IO.print(\"Hello, Bend 2!\")}"
+    ],
+    "description": "Define an IO main function"
+  },
+  "Data type": {
+    "prefix": "type-data",
+    "body": [
+      "type ${1:Name} is Data:",
+      "  ${2:Constructor}{${3:value}: ${4:U32}}"
+    ],
+    "description": "Declare a reusable Data-kinded type"
+  },
+  "Affine type": {
+    "prefix": "type-affine",
+    "body": [
+      "type ${1:Name} is Type:",
+      "  ${2:Constructor}{${3:value}: ${4:U32}}"
+    ],
+    "description": "Declare an affine Type-kinded type"
+  },
+  "Match expression": {
+    "prefix": "match",
+    "body": [
+      "match ${1:value}:",
+      "  case ${2:Constructor}{${3:field}}:",
+      "    ${0:field}"
+    ],
+    "description": "Pattern match on a value"
+  },
+  "Match Nat": {
+    "prefix": "match-nat",
+    "body": [
+      "match ${1:n}:",
+      "  case 0n:",
+      "    ${2:0n}",
+      "  case 1n+${3:p}:",
+      "    ${0:p}"
+    ],
+    "description": "Pattern match on zero and successor Nat"
+  },
+  "Match Bool": {
+    "prefix": "match-bool",
+    "body": [
+      "match ${1:condition}:",
+      "  case False{}:",
+      "    ${2:false_value}",
+      "  case True{}:",
+      "    ${0:true_value}"
+    ],
+    "description": "Use a Bool match (Bend 2 has no if expression)"
+  },
+  "IO do block": {
+    "prefix": "do-io",
+    "body": [
+      "do IO<${1:Unit}>:",
+      "  ${2:value} : ${3:U32} <- ${4:effect}",
+      "  return ${0:value}"
+    ],
+    "description": "Create a typed IO do block"
+  },
+  "Law": {
+    "prefix": "law",
+    "body": [
+      "law ${1:name}:",
+      "  for ${2:x}: ${3:Nat}",
+      "  ${0:{${2:x} == ${2:x} : ${3:Nat}}}"
+    ],
+    "description": "Declare a Bend 2 law"
+  },
+  "Law proof": {
+    "prefix": "proof",
+    "body": [
+      "def ${1:name}(${2:x}):",
+      "  ${0:{==}}"
+    ],
+    "description": "Define the proof paired with a law"
+  },
+  "Parallel calls": {
+    "prefix": "parallel",
+    "body": [
+      "${1:left} ${2:right} = ${3:f}(${4:x}) ${3:f}(${5:y})",
+      "${0:(${1:left}, ${2:right})}"
+    ],
+    "description": "Run two balanced, independent calls in parallel"
+  },
+  "Array allocation": {
+    "prefix": "array",
+    "body": ["[${1:0} : ${2:U32}*${3:8n}]"],
+    "description": "Allocate a Bend 2 affine array"
+  }
+}

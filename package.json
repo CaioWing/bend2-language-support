@@ -1,0 +1,178 @@
+{
+  "name": "bend2-language-support",
+  "displayName": "Bend 2 Language Support",
+  "description": "Syntax highlighting, Bend 2 compiler diagnostics, completions, hovers, snippets, and editor commands.",
+  "version": "0.1.2",
+  "publisher": "CaioWing-bender",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CaioWing/bend2-language-support.git"
+  },
+  "homepage": "https://github.com/CaioWing/bend2-language-support#readme",
+  "bugs": {
+    "url": "https://github.com/CaioWing/bend2-language-support/issues"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Snippets"
+  ],
+  "keywords": [
+    "bend",
+    "bend2",
+    "language",
+    "linter",
+    "proof",
+    "gpu"
+  ],
+  "main": "./src/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "The extension runs the configured Bend executable and creates short-lived check files beside the current source file."
+    }
+  },
+  "activationEvents": [
+    "onLanguage:bend2",
+    "onCommand:bend2.checkFile",
+    "onCommand:bend2.runFile",
+    "onCommand:bend2.showBaseDocumentation"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "bend2",
+        "aliases": [
+          "Bend 2",
+          "Bend"
+        ],
+        "extensions": [
+          ".bend"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "bend2",
+        "scopeName": "source.bend2",
+        "path": "./syntaxes/bend2.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "bend2",
+        "path": "./snippets/bend2.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "bend2.checkFile",
+        "title": "Bend 2: Check Current File",
+        "category": "Bend 2",
+        "icon": "$(check)"
+      },
+      {
+        "command": "bend2.runFile",
+        "title": "Bend 2: Run Current File",
+        "category": "Bend 2",
+        "icon": "$(play)"
+      },
+      {
+        "command": "bend2.showBaseDocumentation",
+        "title": "Bend 2: Show Base Documentation",
+        "category": "Bend 2",
+        "icon": "$(book)"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "bend2.runFile",
+          "when": "resourceLangId == bend2",
+          "group": "navigation@10"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "bend2.checkFile",
+          "when": "resourceLangId == bend2",
+          "group": "navigation@10"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Bend 2",
+      "properties": {
+        "bend2.executablePath": {
+          "type": "string",
+          "default": "bend",
+          "scope": "resource",
+          "description": "Bend 2 executable name or absolute path. Arguments are not accepted here."
+        },
+        "bend2.lint.run": {
+          "type": "string",
+          "enum": [
+            "onSave",
+            "onType",
+            "off"
+          ],
+          "enumDescriptions": [
+            "Check when a Bend file is saved.",
+            "Check after edits stop for the configured delay, and also on save.",
+            "Disable automatic checks. The manual check command remains available."
+          ],
+          "default": "onSave",
+          "scope": "resource",
+          "description": "When to run Bend 2 compiler diagnostics."
+        },
+        "bend2.lint.onOpen": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Check saved Bend files when they are opened."
+        },
+        "bend2.lint.lawsThroughProof": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "When checking LAWS.bend, use a sibling PROOF.bend that imports it so open laws are validated with their companion proofs."
+        },
+        "bend2.lint.delay": {
+          "type": "number",
+          "default": 600,
+          "minimum": 100,
+          "maximum": 10000,
+          "scope": "resource",
+          "description": "Milliseconds to wait before checking in onType mode."
+        },
+        "bend2.lint.timeout": {
+          "type": "number",
+          "default": 20000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "scope": "resource",
+          "description": "Maximum compiler check duration in milliseconds."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "check": "node --check src/extension.js && node --check src/check-plan.js && node --check src/diagnostics.js && node --check src/symbols.js",
+    "test": "node --test test/*.test.js",
+    "package": "vsce package",
+    "publish:open-vsx": "ovsx publish",
+    "verify:open-vsx": "ovsx verify-pat CaioWing-bender"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "4.0.0",
+    "ovsx": "1.2.0"
+  }
+}

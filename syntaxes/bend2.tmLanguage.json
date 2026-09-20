@@ -1,0 +1,193 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Bend 2",
+  "scopeName": "source.bend2",
+  "fileTypes": ["bend"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#imports" },
+    { "include": "#declarations" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#numbers" },
+    { "include": "#holes" },
+    { "include": "#constructors" },
+    { "include": "#calls" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.bend2",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.bend2",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.bend2",
+              "match": "\\\\(?:[\\\\\"'nrt0]|u\\{[0-9A-Fa-f]+\\})"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.bend2",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.bend2",
+              "match": "\\\\(?:[\\\\\"'nrt0]|u\\{[0-9A-Fa-f]+\\})"
+            }
+          ]
+        }
+      ]
+    },
+    "imports": {
+      "patterns": [
+        {
+          "match": "^(\\s*)(import)\\s+([^\\s]+)(?:\\s+(as)\\s+([A-Za-z_][A-Za-z0-9_]*))?",
+          "captures": {
+            "2": { "name": "keyword.control.import.bend2" },
+            "3": { "name": "string.unquoted.module.bend2" },
+            "4": { "name": "keyword.control.import.bend2" },
+            "5": { "name": "entity.name.namespace.bend2" }
+          }
+        }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "^(\\s*)(@unsafe)(\\s+)(def)(\\s+)([A-Za-z_][A-Za-z0-9_.]*)",
+          "captures": {
+            "2": { "name": "storage.modifier.unsafe.bend2" },
+            "4": { "name": "storage.type.function.bend2" },
+            "6": { "name": "entity.name.function.bend2" }
+          }
+        },
+        {
+          "match": "^(\\s*)(def)(\\s+)([A-Za-z_][A-Za-z0-9_.]*)",
+          "captures": {
+            "2": { "name": "storage.type.function.bend2" },
+            "4": { "name": "entity.name.function.bend2" }
+          }
+        },
+        {
+          "match": "^(\\s*)(type)(\\s+)([A-Za-z_][A-Za-z0-9_.]*)",
+          "captures": {
+            "2": { "name": "storage.type.bend2" },
+            "4": { "name": "entity.name.type.bend2" }
+          }
+        },
+        {
+          "match": "^(\\s*)(law)(\\s+)([A-Za-z_][A-Za-z0-9_.]*)",
+          "captures": {
+            "2": { "name": "storage.type.law.bend2" },
+            "4": { "name": "entity.name.function.bend2" }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.bend2",
+          "match": "\\b(?:match|case|do|return|for|exs|where|is|as)\\b"
+        },
+        {
+          "name": "storage.modifier.bend2",
+          "match": "(?<![A-Za-z0-9_])(?:@unsafe|[+\\-~](?=[A-Za-z_]))"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.kind.bend2",
+          "match": "\\b(?:Type|Data|Kind|Quant)\\b"
+        },
+        {
+          "name": "support.type.builtin.bend2",
+          "match": "\\b(?:Empty|Unit|Bool|Cmp|Either|Sigma|Nat|Maybe|Result|List|Array|Image|Event|Map|Set|U32|F32|Char|String|IO|Chan|File|Socket|Window|Audio|App)\\b"
+        },
+        {
+          "name": "entity.name.type.bend2",
+          "match": "\\b[A-Z][A-Za-z0-9_]*(?=\\s*(?:<|\\{|\\b))"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.quantity.bend2",
+          "match": "(?<![A-Za-z0-9_])&[012]\\b"
+        },
+        {
+          "name": "constant.numeric.natural.bend2",
+          "match": "\\b(?:0|[1-9][0-9_]*)n\\b"
+        },
+        {
+          "name": "constant.numeric.float.bend2",
+          "match": "\\b(?:[0-9][0-9_]*\\.[0-9_]+(?:[eE][+\\-]?[0-9_]+)?)\\b"
+        },
+        {
+          "name": "constant.numeric.integer.bend2",
+          "match": "\\b(?:0|[1-9][0-9_]*)\\b"
+        }
+      ]
+    },
+    "holes": {
+      "patterns": [
+        {
+          "name": "invalid.deprecated.hole.bend2",
+          "match": "\\?[A-Za-z_][A-Za-z0-9_]*"
+        },
+        {
+          "name": "constant.language.reflexivity.bend2",
+          "match": "\\{==\\}"
+        }
+      ]
+    },
+    "constructors": {
+      "patterns": [
+        {
+          "name": "entity.name.type.constructor.bend2",
+          "match": "\\b[A-Z][A-Za-z0-9_]*(?=\\{)"
+        },
+        {
+          "name": "constant.language.boolean.bend2",
+          "match": "\\b(?:True|False)\\{"
+        }
+      ]
+    },
+    "calls": {
+      "patterns": [
+        {
+          "name": "entity.name.function.call.bend2",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_.]*(?=!?\\s*\\()"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.bend2",
+          "match": "<\\&>|<>|==|!=|<=|>=|<-|->|=>|\\+\\+|&&|\\|\\||\\.\\&\\.|\\.\\|\\.|\\.\\^\\.|<<|>>|[+\\-*/%<>=!&|~]"
+        },
+        {
+          "name": "punctuation.separator.bend2",
+          "match": "[,;:]"
+        }
+      ]
+    }
+  }
+}
