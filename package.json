@@ -2,7 +2,7 @@
   "name": "bend2-language-support",
   "displayName": "Bend 2 Language Support",
   "description": "Bend 2 language server with contextual completion, navigation, compiler diagnostics, and editor tooling.",
-  "version": "0.2.3",
+  "version": "0.3.1",
   "publisher": "CaioWing-bender",
   "license": "MIT",
   "repository": {
@@ -38,14 +38,15 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": false,
-      "description": "The extension runs the configured Bend executable and creates short-lived check files beside the current source file."
+      "description": "The extension runs the configured Bend compiler. Enable it only for trusted workspaces."
     }
   },
   "activationEvents": [
     "onLanguage:bend2",
     "onCommand:bend2.checkFile",
     "onCommand:bend2.runFile",
-    "onCommand:bend2.showBaseDocumentation"
+    "onCommand:bend2.showBaseDocumentation",
+    "onCommand:bend2.showGuide"
   ],
   "contributes": {
     "languages": [
@@ -92,6 +93,12 @@
         "title": "Bend 2: Show Base Documentation",
         "category": "Bend 2",
         "icon": "$(book)"
+      },
+      {
+        "command": "bend2.showGuide",
+        "title": "Bend 2: Show Language Guide",
+        "category": "Bend 2",
+        "icon": "$(book)"
       }
     ],
     "menus": {
@@ -127,7 +134,8 @@
           "type": "string",
           "default": "bend",
           "scope": "resource",
-          "description": "Bend 2 executable name or absolute path. Arguments are not accepted here."
+          "description": "Bend 2 executable name or absolute path. Arguments are not accepted here.",
+          "restricted": true
         },
         "bend2.lint.run": {
           "type": "string",
@@ -141,7 +149,7 @@
             "Check after edits stop for the configured delay, and also on save.",
             "Disable automatic checks. The manual check command remains available."
           ],
-          "default": "onSave",
+          "default": "onType",
           "scope": "resource",
           "description": "When to run Bend 2 compiler diagnostics."
         },
@@ -149,7 +157,7 @@
           "type": "boolean",
           "default": true,
           "scope": "resource",
-          "description": "Check saved Bend files when they are opened."
+          "description": "Check a Bend document and its local imports when opened."
         },
         "bend2.lint.lawsThroughProof": {
           "type": "boolean",
@@ -177,11 +185,12 @@
     }
   },
   "scripts": {
-    "check": "node --check src/extension.js && node --check src/server.js && node --check src/language-service.js && node --check src/check-plan.js && node --check src/diagnostics.js && node --check src/symbols.js",
+    "check": "node scripts/check.js",
     "test": "node --test test/*.test.js",
     "package": "vsce package",
     "publish:open-vsx": "ovsx publish",
-    "verify:open-vsx": "ovsx verify-pat CaioWing-bender"
+    "verify:open-vsx": "ovsx verify-pat CaioWing-bender",
+    "test:integration": "node --test test/integration/*.test.js"
   },
   "devDependencies": {
     "@vscode/vsce": "4.0.0",

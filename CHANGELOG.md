@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.1
+
+- Treat namespace dots as editor word separators so typing `T.` or `T.Cell.`
+  triggers a fresh completion request in Cursor/VS Code instead of filtering
+  the previous word completion list. Keep qualified-name parsing in the LSP.
+- Add a regression for the editor word pattern, alongside protocol tests.
+
+## 0.3.0
+
+- Move compiler diagnostics into the LSP; remove duplicate VS Code providers.
+- Check complete local import snapshots, including unsaved dependencies and proofs,
+  without writing temporary files into the project or executing main.
+- Cancel stale checks, serialize compiler work and bound input/output resources.
+- Load Base once per compiler; support axiom signatures, constructor placeholders,
+  template arguments and explicit completion edit ranges.
+- Correct case scopes, multiline parameters and nested signature arguments.
+- Add references, conservative project rename, workspace symbols, highlights,
+  folding and structural selection.
+- Add native read-only Base/guide tabs and per-document configuration.
+- Default to diagnostics after typing; add transport, lifecycle and bend-tensor
+  integration regressions. Document unsupported semantic features explicitly.
+
 ## 0.2.3
 
 - Chain import-alias completion directly into module-member completion, so selecting `MatMul` immediately shows `dot`, `matmul`, `parallel`, and related definitions.
