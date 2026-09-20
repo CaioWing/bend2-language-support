@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const vscode = require('vscode');
+const { LanguageClient, TransportKind } = require('vscode-languageclient/node');
 const {
   containsLaw,
   generatedNameReplacements,
@@ -24,10 +25,12 @@ const {
   parseDocument,
   resolveLocalImport
 } = require('./symbols');
+const { parameterList } = require('./language-service');
 
 const TEMP_PREFIX = 'Bend2Vscode';
 const MAX_OUTPUT = 1024 * 1024;
 let activeLintManager;
+let activeLanguageClient;
 
 const LANGUAGE_HELP = new Map([
   ['def', ['Bend 2 definition', 'Declares a typed function. Bend performs little inference, so parameter and result annotations are normally explicit.']],
@@ -506,19 +509,45 @@ function completionFromDeclaration(declaration, moduleName) {
   if (declaration.documentation) {
     item.documentation = new vscode.MarkdownString(declaration.documentation);
   }
+  if (declaration.kind === 'def') {
+    const parameters = parameterList(declaration.signature);
+    const argumentsList = parameters.map((parameter, index) => {
+      const name = parameter.match(/^[+\-~]?([A-Za-z_][A-Za-z0-9_]*)/)?.[1] || `arg${index + 1}`;
+      return `\${${index + 1}:${name}}`;
+    });
+    item.insertText = new vscode.SnippetString(`${declaration.name}(${argumentsList.join(', ')})`);
+    item.command = { command: 'editor.action.triggerParameterHints', title: 'Trigger parameter hints' };
+  } else if (declaration.kind === 'constructor') {
+    const fields = declaration.signature.match(/\{(.*)\}/)?.[1]
+      .split(',')
+      .map((field) => field.trim().match(/^([A-Za-z_][A-Za-z0-9_]*)/)?.[1])
+      .filter(Boolean) || [];
+    if (fields.length > 0) {
+      const values = fields.map((field, index) => `\${${index + 1}:${field}}`);
+      item.insertText = new vscode.SnippetString(`${declaration.name}{${values.join(', ')}}`);
+    }
+  }
   return item;
 }
 
 const completionProvider = {
   async provideCompletionItems(document, position) {
     const prefix = document.lineAt(position.line).text.slice(0, position.character);
-    const qualified = prefix.match(/([A-Za-z_][A-Za-z0-9_]*)\.$/);
+    const qualified = prefix.match(/([A-Za-z_][A-Za-z0-9_.]*)\.$/);
     if (qualified) {
-      const target = await importedDocument(document, qualified[1]);
+      const [alias, ...namespaceParts] = qualified[1].split('.');
+      const target = await importedDocument(document, alias);
       if (target) {
-        return parseDocument(target.getText()).declarations.map((declaration) =>
-          completionFromDeclaration(declaration, qualified[1])
-        );
+        const namespace = namespaceParts.join('.');
+        const declarations = parseDocument(target.getText()).declarations;
+        return declarations.flatMap((declaration) => {
+          if (!namespace) return [completionFromDeclaration(declaration, alias)];
+          const memberPrefix = `${namespace}.`;
+          if (!declaration.name.startsWith(memberPrefix)) return [];
+          const memberName = declaration.name.slice(memberPrefix.length);
+          if (memberName.includes('.')) return [];
+          return [completionFromDeclaration({ ...declaration, name: memberName }, qualified[1])];
+        });
       }
       const members = BASE_MEMBERS.get(qualified[1]);
       if (!members) {
@@ -536,11 +565,21 @@ const completionProvider = {
 
     const seen = new Set();
     const completions = [];
-    for (const declaration of parseDocument(document.getText()).declarations) {
+    const parsed = parseDocument(document.getText());
+    for (const declaration of parsed.declarations) {
       if (!seen.has(declaration.name)) {
         seen.add(declaration.name);
         completions.push(completionFromDeclaration(declaration));
       }
+    }
+    for (const imported of parsed.imports) {
+      if (!imported.alias || imported.alias === 'Base' || seen.has(imported.alias)) continue;
+      seen.add(imported.alias);
+      const item = new vscode.CompletionItem(imported.alias, vscode.CompletionItemKind.Module);
+      item.detail = `Module ${imported.path}`;
+      item.insertText = `${imported.alias}.`;
+      item.command = { command: 'editor.action.triggerSuggest', title: 'Show module members' };
+      completions.push(item);
     }
     for (const keyword of KEYWORD_COMPLETIONS) {
       if (seen.has(keyword)) {
@@ -759,8 +798,27 @@ async function showBaseDocumentation(output) {
   output.append(result.output || '(No documentation returned.)\n');
 }
 
-function activate(context) {
+async function activate(context) {
   const selector = { language: 'bend2', scheme: 'file' };
+  const serverModule = context.asAbsolutePath(path.join('src', 'server.js'));
+  const serverOptions = {
+    run: { module: serverModule, transport: TransportKind.ipc },
+    debug: { module: serverModule, transport: TransportKind.ipc }
+  };
+  activeLanguageClient = new LanguageClient(
+    'bend2LanguageServer',
+    'Bend 2 Language Server',
+    serverOptions,
+    {
+      documentSelector: [selector],
+      synchronize: { configurationSection: 'bend2' }
+    }
+  );
+  context.subscriptions.push(activeLanguageClient);
+  await activeLanguageClient.start();
+  const cursorCompletionCompatibility = /cursor/i.test(vscode.env.appName)
+    ? vscode.languages.registerCompletionItemProvider(selector, completionProvider, '.')
+    : { dispose() {} };
   const diagnostics = vscode.languages.createDiagnosticCollection('bend2');
   const output = vscode.window.createOutputChannel('Bend 2');
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -828,14 +886,11 @@ function activate(context) {
     diagnostics,
     output,
     status,
+    cursorCompletionCompatibility,
     { dispose: () => lintManager.dispose() },
     vscode.commands.registerCommand('bend2.checkFile', () => checkCurrentFile(lintManager)),
     vscode.commands.registerCommand('bend2.runFile', runCurrentFile),
     vscode.commands.registerCommand('bend2.showBaseDocumentation', () => showBaseDocumentation(output)),
-    vscode.languages.registerCompletionItemProvider(selector, completionProvider, '.'),
-    vscode.languages.registerHoverProvider(selector, hoverProvider),
-    vscode.languages.registerDefinitionProvider(selector, definitionProvider),
-    vscode.languages.registerDocumentSymbolProvider(selector, documentSymbolProvider),
     vscode.window.onDidChangeActiveTextEditor(updateStatus),
     vscode.workspace.onDidOpenTextDocument(checkOnOpen),
     vscode.workspace.onDidChangeTextDocument((event) => {
@@ -887,10 +942,15 @@ function activate(context) {
   }
 }
 
-function deactivate() {
+async function deactivate() {
   if (activeLintManager) {
     activeLintManager.dispose();
     activeLintManager = undefined;
+  }
+  if (activeLanguageClient) {
+    const client = activeLanguageClient;
+    activeLanguageClient = undefined;
+    await client.stop();
   }
 }
 

@@ -1,8 +1,8 @@
 {
   "name": "bend2-language-support",
   "displayName": "Bend 2 Language Support",
-  "description": "Syntax highlighting, Bend 2 compiler diagnostics, completions, hovers, snippets, and editor commands.",
-  "version": "0.1.3",
+  "description": "Bend 2 language server with contextual completion, navigation, compiler diagnostics, and editor tooling.",
+  "version": "0.2.3",
   "publisher": "CaioWing-bender",
   "license": "MIT",
   "repository": {
@@ -25,6 +25,8 @@
     "bend",
     "bend2",
     "language",
+    "lsp",
+    "autocomplete",
     "linter",
     "proof",
     "gpu"
@@ -108,6 +110,16 @@
         }
       ]
     },
+    "configurationDefaults": {
+      "[bend2]": {
+        "editor.suggestOnTriggerCharacters": true,
+        "editor.quickSuggestions": {
+          "other": "on",
+          "comments": "off",
+          "strings": "off"
+        }
+      }
+    },
     "configuration": {
       "title": "Bend 2",
       "properties": {
@@ -165,7 +177,7 @@
     }
   },
   "scripts": {
-    "check": "node --check src/extension.js && node --check src/check-plan.js && node --check src/diagnostics.js && node --check src/symbols.js",
+    "check": "node --check src/extension.js && node --check src/server.js && node --check src/language-service.js && node --check src/check-plan.js && node --check src/diagnostics.js && node --check src/symbols.js",
     "test": "node --test test/*.test.js",
     "package": "vsce package",
     "publish:open-vsx": "ovsx publish",
@@ -174,5 +186,10 @@
   "devDependencies": {
     "@vscode/vsce": "4.0.0",
     "ovsx": "1.2.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
   }
 }

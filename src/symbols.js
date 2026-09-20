@@ -50,7 +50,7 @@ function parseDocument(text) {
       continue;
     }
 
-    const constructor = activeType && value.match(/^\s+([A-Z][A-Za-z0-9_]*)\s*\{/);
+    const constructor = activeType && value.match(/^\s+([A-Z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\s*\{/);
     if (constructor) {
       declarations.push({
         kind: 'constructor',

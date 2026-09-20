@@ -12,7 +12,7 @@ import ./math.bend as M
 # A reusable shape.
 type Shape is Data:
   Circle{radius: U32}
-  Square{side: U32}
+  Shape.square{side: U32}
 
 def area(x: Shape) -> U32:
   0
@@ -25,6 +25,7 @@ law area_non_negative:
   assert.deepEqual(parsed.imports[1], { path: './math.bend', alias: 'M', line: 1 });
   assert.equal(declarationAt(parsed, 'Shape').documentation, 'A reusable shape.');
   assert.equal(declarationAt(parsed, 'Circle').kind, 'constructor');
+  assert.equal(declarationAt(parsed, 'Shape.square').kind, 'constructor');
   assert.equal(declarationAt(parsed, 'area').kind, 'def');
   assert.equal(declarationAt(parsed, 'area_non_negative').kind, 'law');
 });

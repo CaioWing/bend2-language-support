@@ -10,10 +10,15 @@ Unofficial VS Code support for the current Bend 2 syntax and compiler. This exte
 - Compiler-backed diagnostics in the Problems panel.
 - Safe checks that import a temporary copy of the file, so linting never executes its `main` function.
 - Configurable checks on open, save, or after typing.
-- Bend 2 keywords, local declarations, and imported-module member completions.
-- Hover help for core language concepts and declarations.
-- Go to Definition for local declarations and members of relative imports.
-- Outline symbols for definitions, types, constructors, and laws.
+- A real Language Server Protocol (LSP) process with contextual autocomplete.
+- Completions for parameters, local and pattern bindings, declarations, qualified constructors such as `Cell.new`, nested qualified names, import aliases, relative-module members, Base members, keywords, and structural snippets.
+- Function completions insert argument placeholders and trigger parameter hints.
+- Completing an import alias such as `MatMul` inserts the dot and immediately opens that module's member suggestions.
+- Signature help for local, imported, and compiler-provided Base functions.
+- Type-aware convenience completion: typing `value.` for an explicitly typed binding suggests applicable namespace functions and rewrites the selection to valid Bend syntax such as `U32.add(value, argument)`.
+- Hover help for core language concepts, declarations, and local bindings.
+- Go to Definition for declarations, local bindings, parameters, and members of relative imports.
+- Clickable relative imports and outline symbols for definitions, types, constructors, and laws.
 - Snippets for definitions, datatypes, matches, IO, laws, proofs, arrays, and parallel calls.
 - Commands to check a file, run a file, and query `bend base` documentation.
 
@@ -82,11 +87,13 @@ npm run package
 `npm run package` uses the pinned `@vscode/vsce` development dependency and creates a `.vsix` that can be installed with:
 
 ```sh
-code --install-extension bend2-language-support-0.1.2.vsix
+code --install-extension bend2-language-support-0.2.3.vsix
 ```
 
 Tagged releases named `vscode-bend2-v<version>` are validated, published to Open VSX, and attached to a matching GitHub Release by `.github/workflows/release-vscode-extension.yml`. The tag version must equal the version in `package.json`.
 
-## Current scope
+## Language server scope
 
-This is a lightweight compiler integration, not a full language server. Bend's compiler remains the source of truth for types, affine-use checks, termination, and proofs. Completion parsing intentionally covers top-level declarations and direct relative imports rather than attempting semantic type inference.
+The extension starts a local Bend 2 language server over IPC. It incrementally tracks open documents and reads direct relative imports for completion, hover, navigation, signature help, document links, and symbols. Local completion recognizes function parameters, law binders, case-pattern names, lambda parameters, and prior local bindings in the current declaration.
+
+Bend has qualified namespace functions rather than classes or instance methods. For discoverability, the server can turn completion on an explicitly typed binding such as `number.` into the corresponding valid qualified call, while filtering out functions that cannot receive that type. Bend's compiler remains the source of truth for inference, affine-use checks, termination, and proofs. Base signatures are loaded from the configured compiler and can also be queried with **Bend 2: Show Base Documentation**.
