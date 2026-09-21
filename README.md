@@ -116,7 +116,7 @@ npm ci
 npm test                    # parser, protocol and process/lifecycle regressions
 npm run check               # syntax-check every source module
 npm run test:integration    # real Bend + ../bend-tensor
-npm run package             # produces bend2-language-support-0.3.1.vsix
+npm run package             # produces bend2-language-support-0.3.2.vsix
 ```
 
 The integration suite requires Bend and the sibling `bend-tensor` checkout.
@@ -127,7 +127,7 @@ Run `python3 tests/test.py` inside `bend-tensor` for its native numerical tests.
 
 Open this extension folder and press **F5** for an Extension Development Host.
 Install the package using your editor's **Extensions: Install from VSIX** command
-(or `cursor --install-extension bend2-language-support-0.3.1.vsix`).
+(or `cursor --install-extension bend2-language-support-0.3.2.vsix`).
 
 The core has one implementation of language features in `server.js`, with small
 modules for structural parsing, navigation, diagnostics, snapshots and process

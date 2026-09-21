@@ -2,8 +2,9 @@
   "name": "bend2-language-support",
   "displayName": "Bend 2 Language Support",
   "description": "Bend 2 language server with contextual completion, navigation, compiler diagnostics, and editor tooling.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "CaioWing-bender",
+  "icon": "assets/lsp-bend-logo.png",
   "license": "MIT",
   "repository": {
     "type": "git",

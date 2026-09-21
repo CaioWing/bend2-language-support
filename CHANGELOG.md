@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- Add the Bend LSP logo as the extension and marketplace icon.
+
 ## 0.3.1
 
 - Treat namespace dots as editor word separators so typing `T.` or `T.Cell.`

@@ -5,3 +5,4 @@ test/**
 **/*.test.js
 *.vsix
 scripts/**
+VALIDATION.md
